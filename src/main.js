@@ -1,35 +1,7 @@
 import Phaser from 'phaser';
-
-// Basic scene to verify setup
-class MainScene extends Phaser.Scene {
-    constructor() {
-        super({ key: 'MainScene' });
-    }
-
-    preload() {
-        // We'll load assets here later
-        console.log('Phaser is loading!');
-    }
-
-    create() {
-        // Add basic text to confirm setup works
-        this.add.text(400, 300, '🚀 Phaser is Working!', {
-            fontSize: '32px',
-            fill: '#fff',
-            fontFamily: 'Arial'
-        }).setOrigin(0.5);
-
-        this.add.text(400, 350, 'Development Phase 1: Foundation', {
-            fontSize: '18px',
-            fill: '#3498db',
-            fontFamily: 'Arial'
-        }).setOrigin(0.5);
-    }
-
-    update() {
-        // Game loop will go here
-    }
-}
+import BootScene from './scenes/BootScene.js';
+import GameScene from './scenes/GameScene.js';
+import GameOverScene from './scenes/GameOverScene.js';
 
 // Phaser game configuration
 const config = {
@@ -40,14 +12,14 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 300 },
-            debug: false
+            gravity: { y: 0 }, // We'll change this later
+            debug: true // Helpful for learning!
         }
     },
-    scene: MainScene
+    scene: [BootScene, GameScene, GameOverScene]
 };
 
 // Create the game instance
 const game = new Phaser.Game(config);
 
-console.log('🎮 Typing Jump - Development Started!');
+console.log('🚀 Typing Jump - Development Started!');
