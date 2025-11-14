@@ -5,44 +5,50 @@ export default class Player {
         // Create player sprite with physics
         this.sprite = scene.physics.add.sprite(x, y, 'player');
         
-        // Configure physics properties
-        this.sprite.setBounce(0.2); // Little bounce when landing
-        this.sprite.setCollideWorldBounds(true); // Don't go outside screen
-        this.sprite.setGravityY(300); // Fall downward
+        // Doodle Jump style physics
+        this.sprite.setBounce(0.2);
+        this.sprite.setCollideWorldBounds(false);
+        this.sprite.setGravityY(800);
         
-        // Store reference for easy access
-        scene.player = this.sprite;
+        // Player properties
+        this.moveSpeed = 200;
+        this.jumpForce = -500;
         
-        console.log("🎮 Player created at:", x, y);
+        // Add drag for better stopping
+        this.sprite.setDragX(800); // This stops sliding!
+        
+        console.log("🎮 Player created with proper physics");
     }
     
-    // Method to handle player movement
     update(cursors) {
+        // Horizontal movement - DIRECT CONTROL
         if (cursors.left.isDown) {
-            this.sprite.setVelocityX(-160);
+            this.sprite.setVelocityX(-this.moveSpeed);
         } else if (cursors.right.isDown) {
-            this.sprite.setVelocityX(160);
+            this.sprite.setVelocityX(this.moveSpeed);
         } else {
+            // INSTANT STOP - no sliding
             this.sprite.setVelocityX(0);
         }
         
-        // Allow jumping only when touching the ground
+        // Jumping
         if (cursors.up.isDown && this.isGrounded()) {
-            this.sprite.setVelocityY(-330);
-            console.log("🦘 JUMP! Grounded:", this.isGrounded());
+            this.sprite.setVelocityY(this.jumpForce);
         }
     }
-
-    // check ground detection
+    
     isGrounded() {
-        return this.sprite.body.blocked.down || this.sprite.body.touching.down;
+        return this.sprite.body.touching.down || this.sprite.body.blocked.down;
     }
     
-    // Get position for other classes to use
     getPosition() {
         return {
             x: this.sprite.x,
             y: this.sprite.y
         };
+    }
+    
+    getScreenY(cameraY) {
+        return this.sprite.y - cameraY;
     }
 }
