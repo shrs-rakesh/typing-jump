@@ -10,13 +10,14 @@ export default class PlatformManager {
     
     createInitialPlatforms() {
         // Starting platform under player
-        this.createPlatform(400, 550, 200);
+        this.createPlatform(400, 550, 250);
         
         // Create initial platforms going upward - CLOSER TOGETHER
-        for (let i = 1; i <= 20; i++) {
-            const x = Phaser.Math.Between(100, 700);
-            const y = 500 - (i * 70); // Platforms every 70 pixels (was 80)
-            this.createPlatform(x, y, Phaser.Math.Between(140, 200)); // Wider platforms
+        for (let i = 1; i <= 25; i++) {
+            const x = Phaser.Math.Between(50, 750);
+            const y = 500 - (i * 65); // Platforms every 70 pixels (was 80)
+            const width = Phaser.Math.Between(160, 220);
+            this.createPlatform(x, y, width); // Wider platforms
         }
         
         console.log("📊 Created initial platforms");
@@ -27,7 +28,17 @@ export default class PlatformManager {
         platform.setDisplaySize(width, 32);
         platform.refreshBody();
         
-        // Track the highest (lowest Y value) platform
+        // Assign a letter only if letterManager exists (typing mode)
+        if (this.letterManager) {
+            this.letterManager.assignLetterToPlatform(platform);
+            platform.isActive = false; // Start inactive in typing mode
+        } else {
+            // Arrow mode - platform is always active
+            platform.isActive = true;
+            platform.setTint(0x3498db); // Blue for active
+        }
+        
+        // Track the highest platform
         this.highestPlatformY = Math.min(this.highestPlatformY, y);
         this.platformCount++;
         
@@ -35,18 +46,19 @@ export default class PlatformManager {
     }
     
     createRandomPlatform(targetY) {
-        const x = Phaser.Math.Between(100, 700);
-        const width = Phaser.Math.Between(120, 200);
+        const x = Phaser.Math.Between(50, 750);
+        const width = Phaser.Math.Between(160, 220);
         return this.createPlatform(x, targetY, width);
     }
     
     update(cameraY) {
         // Generate new platforms when player goes high enough
-        const generateThreshold = cameraY - 300; // Generate sooner (was 400)
+        const generateThreshold = cameraY - 250; // Generate sooner (was 400)
         
         if (this.highestPlatformY > generateThreshold) {
-            const newY = this.highestPlatformY - Phaser.Math.Between(60, 90); // Closer platforms
+            const newY = this.highestPlatformY - Phaser.Math.Between(50, 80); // Closer platforms
             this.createRandomPlatform(newY);
+            console.log("🆕 Generated new platform at Y:", newY);
         }
         
         // Clean up platforms far below camera

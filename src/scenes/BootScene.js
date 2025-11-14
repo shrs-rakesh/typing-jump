@@ -4,7 +4,6 @@ export default class BootScene extends Phaser.Scene {
     }
     
     preload() {
-        // Load a simple loading bar or logo here later
         console.log("🎮 BootScene: Starting game...");
         
         // Display loading text
@@ -15,11 +14,11 @@ export default class BootScene extends Phaser.Scene {
     }
     
     create() {
-        console.log("✅ BootScene: Complete! Starting GameScene...");
+        console.log("✅ BootScene: Complete! Starting Main Menu...");
         
-        // Start the main game scene after a brief delay
+        // Start the main menu after a brief delay
         this.time.delayedCall(1000, () => {
-            this.scene.start('GameScene');
+            this.scene.start('MainMenuScene');
         });
     }
 }
