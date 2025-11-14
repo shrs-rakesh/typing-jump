@@ -6,16 +6,18 @@ export default class Player {
         this.sprite = scene.physics.add.sprite(x, y, 'player');
         
         // Doodle Jump style physics
-        this.sprite.setBounce(0.2);
+        this.sprite.setBounce(0.3);
         this.sprite.setCollideWorldBounds(false);
         this.sprite.setGravityY(800);
         
         // Player properties
         this.moveSpeed = 200;
-        this.jumpForce = -500;
+        this.jumpForce = -650;
         
         // Add drag for better stopping
-        this.sprite.setDragX(800); // This stops sliding!
+        this.sprite.setDragX(600); // This stops sliding!
+
+        this.scene = scene;
         
         console.log("🎮 Player created with proper physics");
     }
@@ -34,6 +36,7 @@ export default class Player {
         // Jumping
         if (cursors.up.isDown && this.isGrounded()) {
             this.sprite.setVelocityY(this.jumpForce);
+            console.log("🦘 JUMP! Force:", this.jumpForce);
         }
     }
     
