@@ -2,6 +2,7 @@ import Player from '../classes/Player.js';
 import PlatformManager from '../classes/PlatformManager.js';
 import LetterManager from '../classes/LetterManager.js';
 import SettingsManager from '../managers/SettingsManager.js';
+import AudioManager from '../managers/AudioManager.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -16,11 +17,12 @@ export default class GameScene extends Phaser.Scene {
     }
     
     preload() {
-        console.log("📦 Preloading Doodle Jump assets...");
+        console.log("📦 Preloading Jump assets...");
     }
     
     create() {
-        console.log("🎯 Starting Typing Doodle Jump...");
+        console.log("🎯 ========== GAME SCENE START ==========");
+        console.log("🔧 Step 1: GameScene create() called");
         
         // Reset game state
         this.score = 0;
@@ -30,6 +32,10 @@ export default class GameScene extends Phaser.Scene {
         
         // Set sky background
         this.cameras.main.setBackgroundColor('#87CEEB');
+        const background = this.add.rectangle(400, 300, 800, 600, 0x87CEEB);
+        background.setScrollFactor(0); // Doesn't move with camera
+        background.setDepth(-1000); // Behind everything
+        console.log("🔧 Step 2: Background set");
         
         // Get settings - ensure registry has settings
         if (!this.registry.has('settings')) {
@@ -39,28 +45,46 @@ export default class GameScene extends Phaser.Scene {
         this.settings = this.registry.get('settings');
         this.controlType = this.settings.getControlType();
         
-        console.log(`🎮 Starting game with controls: ${this.controlType}`);
+        console.log("🔧 Step 3: Control type =", this.controlType);
+
+        // Initialize audio manager
+        this.audioManager = new AudioManager(this);
+        console.log("🔧 Step 4: Audio manager created");
         
         // Create placeholder graphics FIRST
         this.createPlaceholderGraphics();
+        console.log("🔧 Step 5: Placeholder graphics created");
         
         // Initialize game systems based on control type
         this.initializeGameSystems();
+        console.log("🔧 Step 6: Game systems initialized");
         
         // Set up input
         this.setupInput();
+        console.log("🔧 Step 7: Input setup");
         
         // Set up collisions
         this.setupCollisions();
+        console.log("🔧 Step 8: Collisions setup");
         
         // Camera setup
         this.setupCamera();
+        console.log("🔧 Step 9: Camera setup");
         
         // UI setup
         this.setupUI();
+        console.log("🔧 Step 10: UI setup");
+
+        console.log("🔧 Step 11: About to create typing display...");
+        console.log("🔧 Control type check:", this.controlType === 'typing' ? 'TYPING MODE' : 'ARROW MODE');
 
         if (this.controlType === 'typing') {
+            console.log("🔧 Creating typing display because we're in typing mode");
             this.createKeyboardDisplay();
+            console.log("✅ Typing display created!");
+            // this.createFloatingLetterIndicator();
+        }else{
+            console.log("❌ Not in typing mode, skipping typing display");
         }
         
         console.log("✅ Game setup complete!");
@@ -83,12 +107,16 @@ export default class GameScene extends Phaser.Scene {
     }
     
     setupCamera() {
+        this.physics.world.setBounds(0, 0, 800, 600);
+
         // Camera follows player vertically only
         this.cameras.main.startFollow(this.player.sprite);
         this.cameras.main.setFollowOffset(0, 150); // Look further ahead upward
         
         // Set deadzone - camera moves when player goes above this point
         this.cameras.main.setDeadzone(0, 100); // Smaller deadzone for faster following
+
+        this.cameras.main.setBounds(0, 0, 800, 600);
         
         // Smoother camera following
         this.cameras.main.setLerp(0.1, 0.1);
@@ -112,7 +140,7 @@ export default class GameScene extends Phaser.Scene {
             fontFamily: 'Arial',
             backgroundColor: '#000000',
             padding: { x: 10, y: 5 }
-        }).setScrollFactor(0);
+        }).setScrollFactor(0).setDepth(1000);
         this.uiGroup.add(this.scoreText);
 
         // Mode indicator (top center)
@@ -122,7 +150,7 @@ export default class GameScene extends Phaser.Scene {
             fontFamily: 'Arial',
             backgroundColor: '#2c3e50',
             padding: { x: 10, y: 5 }
-        }).setOrigin(0.5).setScrollFactor(0);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(1000);
         this.uiGroup.add(this.modeText);
 
         // Current letters to type (below score - MORE SPACE)
@@ -146,17 +174,27 @@ export default class GameScene extends Phaser.Scene {
         this.uiGroup.add(this.statsText);
 
         // Instructions (top right - won't overlap with left side)
-        const instructions = this.controlType === 'typing' 
-            ? 'Type letters to activate platforms!\n← → Move\n↑ Jump'
-            : 'All platforms active!\n← → Move\n↑ Jump';
-            
+        // const instructions = this.controlType === 'typing' 
+        //     ? 'Type letters to activate platforms!\n← → Move\n↑ Jump'
+        //     : 'All platforms active!\n← → Move\n↑ Jump';
+
+        // Better instructions for typing mode
+        let instructions = '';
+        if (this.controlType === 'typing') {
+            instructions = 'Type the ORANGE platform letters!\n← → Move, ↑ Jump';
+        } else {
+            instructions = 'All platforms active!\n← → Move, ↑ Jump';
+        }
+    
         this.instructionsText = this.add.text(650, 20, instructions, {
             fontSize: '14px',
             fill: '#2c3e50',
             fontFamily: 'Arial',
             align: 'right',
-            lineSpacing: 5
-        }).setOrigin(1, 0).setScrollFactor(0); // Right-aligned
+            lineSpacing: 5,
+            backgroundColor: '#1de86bff',
+            padding: { x: 20, y: 10 },
+        }).setOrigin(1, 0).setScrollFactor(0).setDepth(1000);
         this.uiGroup.add(this.instructionsText);
 
         console.log("📊 UI setup complete - no overlapping");
@@ -181,10 +219,19 @@ export default class GameScene extends Phaser.Scene {
         
         // Update score based on height
         this.updateScore();
-        
-        // Expand letter pool as player progresses (typing mode only)
+
         if (this.controlType === 'typing' && this.letterManager && this.score > 0 && this.score % 100 === 0) {
             this.letterManager.expandLetterPool();
+        }
+         
+        // Update platform highlights in typing mode
+        if (this.controlType === 'typing' && this.letterManager) {
+            this.letterManager.highlightPlatformsWithLetters();
+        }
+
+        // ADD THIS: Update the prominent typing display
+        if (this.controlType === 'typing') {
+            this.updateTypingDisplay();
         }
         
         // Check game over with visual warning
@@ -275,9 +322,16 @@ export default class GameScene extends Phaser.Scene {
                     
                     this.lettersText.setText(`Type: ${lettersString}`);
                     this.lettersText.setBackgroundColor('#e74c3c'); // Red background for attention
+                    this.lettersText.setStyle({
+                        fontSize: '20px',
+                        fill: '#ffffff',
+                        fontFamily: 'Arial',
+                        fontWeight: 'bold'
+                    });
                 } else {
                     this.lettersText.setText('All platforms active!');
                     this.lettersText.setBackgroundColor('#2ecc71'); // Green when all done
+                    this.lettersText.setFill('#ffffff');
                 }
             }
             
@@ -356,6 +410,11 @@ export default class GameScene extends Phaser.Scene {
         
         this.isGameOver = true;
         console.log("💀 Game Over! Final Score:", this.score);
+
+        // PLAY GAME OVER SOUND
+        if (this.audioManager) {
+            this.audioManager.playSound('game_over', { volume: 0.8 });
+        }
         
         // Stop player physics
         this.player.sprite.setVelocity(0, 0);
@@ -373,7 +432,11 @@ export default class GameScene extends Phaser.Scene {
         
         // Transition to game over scene after delay
         this.time.delayedCall(2000, () => {
-            this.scene.start('GameOverScene', { score: this.score });
+            this.scene.start('GameOverScene', { 
+                score: this.score,
+                correct: this.typedCorrectly,
+                wrong: this.typedWrong
+            });
         });
     }
 
@@ -516,6 +579,11 @@ export default class GameScene extends Phaser.Scene {
         if (platform.isActive) {
             // Normal bounce on active platforms
             console.log("🟢 Landed on active platform");
+
+            // PLAY LANDING SOUND
+            if (this.audioManager && this.player.isGrounded()) {
+                this.audioManager.playSound('land', { volume: 0.3 });
+            }
         } else {
             // INACTIVE platform - player falls through!
             console.log("🔴 Hit INACTIVE platform - will fall through!");
@@ -592,25 +660,195 @@ export default class GameScene extends Phaser.Scene {
 
     // Add visual feedback for key presses
     showKeyPressFeedback(key, isCorrect) {
-        const feedback = this.add.text(400, 500, isCorrect ? `✅ ${key}` : `❌ ${key}`, {
-            fontSize: '32px',
+        const cameraY = this.cameras.main.scrollY;
+        // const feedback = this.add.text(400, 500, isCorrect ? `✅ ${key}` : `❌ ${key}`, {
+        //     fontSize: '32px',
+        //     fill: isCorrect ? '#00ff00' : '#ff0000',
+        //     fontFamily: 'Arial',
+        //     backgroundColor: isCorrect ? '#006400' : '#8B0000',
+        //     padding: { x: 15, y: 10 }
+        // }).setOrigin(0.5).setScrollFactor(0);
+
+        const feedback = this.add.text(400, cameraY + 200, isCorrect ? `✅ ${key}` : `❌ ${key}`, {
+            fontSize: '48px', // Larger
             fill: isCorrect ? '#00ff00' : '#ff0000',
             fontFamily: 'Arial',
             backgroundColor: isCorrect ? '#006400' : '#8B0000',
-            padding: { x: 15, y: 10 }
+            padding: { x: 20, y: 15 },
+            stroke: '#000000',
+            strokeThickness: 4
         }).setOrigin(0.5).setScrollFactor(0);
         
         // Animate the feedback
         this.tweens.add({
             targets: feedback,
-            y: 450,
-            alpha: 0,
-            duration: 1000,
-            ease: 'Power2',
+            y: cameraY + 150,
+            scale: 1.5,
+            duration: 800,
+            ease: 'Back.easeOut',
+            yoyo: true,
             onComplete: () => {
                 feedback.destroy();
             }
         });
     }
+
+    // In GameScene.js, add these methods:
+    createFloatingLetterIndicator() {
+        if (this.controlType !== 'typing') return;
+        
+        // Create a group for floating indicators
+        this.floatingIndicators = this.add.group();
+        
+        console.log("🔤 Created floating letter indicator");
+    }
+
+    updateFloatingLetterIndicator() {
+        if (this.controlType !== 'typing' || !this.letterManager) return;
+        
+        // Clear existing indicators
+        this.floatingIndicators.clear(true, true);
+        
+        const currentLetters = this.letterManager.getCurrentLetters();
+        const cameraY = this.cameras.main.scrollY;
+        
+        // Create floating indicators for each needed letter
+        currentLetters.forEach((letter, index) => {
+            const x = 100 + (index * 100); // Space them out
+            const y = cameraY + 100; // Near top of screen
+            
+            // Background for the indicator
+            const bg = this.add.rectangle(x, y, 60, 60, 0xffa500)
+                .setStrokeStyle(4, 0x000000)
+                .setScrollFactor(0);
+            
+            // The letter itself
+            const text = this.add.text(x, y, letter, {
+                fontSize: '36px',
+                fill: '#ffffff',
+                fontFamily: 'Arial',
+                fontWeight: 'bold',
+                stroke: '#000000',
+                strokeThickness: 6
+            }).setOrigin(0.5).setScrollFactor(0);
+            
+            // Pulsing animation
+            this.tweens.add({
+                targets: [bg, text],
+                scale: 1.2,
+                duration: 500,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+            
+            this.floatingIndicators.add(bg);
+            this.floatingIndicators.add(text);
+        });
+        
+        // If no letters needed, show a "all active" message
+        if (currentLetters.length === 0) {
+            const message = this.add.text(400, cameraY + 100, '✓ All Platforms Active!', {
+                fontSize: '24px',
+                fill: '#00ff00',
+                fontFamily: 'Arial',
+                fontWeight: 'bold',
+                backgroundColor: '#000000',
+                padding: { x: 20, y: 10 }
+            }).setOrigin(0.5).setScrollFactor(0);
+            
+            this.floatingIndicators.add(message);
+        }
+    }
     
+    // Add this method to GameScene.js
+    createTypingDisplay() {
+        console.log("🟧 createTypingDisplay() CALLED!");
+        
+        // CREATE THE ORANGE BACKGROUND
+        this.typingDisplayBg = this.add.rectangle(400, 80, 400, 100, 0xff6b00);
+        this.typingDisplayBg.setStrokeStyle(8, 0x000000);
+        this.typingDisplayBg.setScrollFactor(0);
+        this.typingDisplayBg.setDepth(1000);
+        console.log("🟧 Background created");
+        
+        // CREATE THE MAIN TEXT
+        this.typingDisplayText = this.add.text(400, 80, 'TYPE: A', {
+            fontSize: '48px',
+            fill: '#ffffff',
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        });
+        this.typingDisplayText.setOrigin(0.5);
+        this.typingDisplayText.setScrollFactor(0);
+        this.typingDisplayText.setDepth(1001);
+        console.log("🟧 Main text created");
+        
+        // CREATE THE INSTRUCTION TEXT
+        this.typingDisplayInstruction = this.add.text(400, 140, 'Press A on keyboard!', {
+            fontSize: '18px',
+            fill: '#ffff00',
+            fontFamily: 'Arial'
+        });
+        this.typingDisplayInstruction.setOrigin(0.5);
+        this.typingDisplayInstruction.setScrollFactor(0);
+        this.typingDisplayInstruction.setDepth(1001);
+        console.log("🟧 Instruction text created");
+        
+        // ADD A TEST MESSAGE TO CONFIRM IT'S WORKING
+        const testMessage = this.add.text(400, 200, 'ORANGE BOX SHOULD BE VISIBLE!', {
+            fontSize: '24px',
+            fill: '#ff0000',
+            fontFamily: 'Arial',
+            backgroundColor: '#ffff00'
+        });
+        testMessage.setOrigin(0.5);
+        testMessage.setScrollFactor(0);
+        console.log("🟧 Test message created");
+        
+        console.log("✅ createTypingDisplay() COMPLETED SUCCESSFULLY!");
+    }
+
+    // Update the typing display with current letters
+    updateTypingDisplay() {
+        console.log("🔧 updateTypingDisplay() called");
+        
+        // Check if we're even supposed to be here
+        if (this.controlType !== 'typing') {
+            console.log("❌ Not in typing mode, skipping update");
+            return;
+        }
+        
+        // Check if elements exist
+        if (!this.typingDisplayText) {
+            console.log("❌ ERROR: typingDisplayText is undefined!");
+            console.log("❌ Let me try to create it now...");
+            this.createTypingDisplay();
+            return;
+        }
+        
+        if (!this.typingDisplayBg) {
+            console.log("❌ ERROR: typingDisplayBg is undefined!");
+            return;
+        }
+        
+        if (!this.typingDisplayInstruction) {
+            console.log("❌ ERROR: typingDisplayInstruction is undefined!");
+            return;
+        }
+        
+        console.log("✅ All typing display elements exist, updating...");
+        
+        // Simple update logic
+        if (this.letterManager) {
+            const currentLetters = this.letterManager.getCurrentLetters();
+            if (currentLetters.length > 0) {
+                this.typingDisplayText.setText(`TYPE: ${currentLetters[0]}`);
+            } else {
+                this.typingDisplayText.setText('ALL ACTIVE!');
+            }
+        }
+        
+        console.log("✅ updateTypingDisplay() completed");
+    }
 }

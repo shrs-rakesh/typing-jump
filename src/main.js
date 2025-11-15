@@ -19,10 +19,21 @@ const config = {
             debug: false // Turn off debug for cleaner look
         }
     },
+    render: {
+        pixelArt: false,
+        antialias: true,
+        roundPixels: false
+    },
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 800,
+        height: 600
+    },
     scene: [BootScene, MainMenuScene, SettingsScene, GameScene, GameOverScene]
 };
 
 // Create the game instance
 const game = new Phaser.Game(config);
 
-console.log('🚀 Typing Doodle Jump - Now with Settings!');
+console.log('🚀 Typing Jump - Now with Settings!');

@@ -6,7 +6,7 @@ export default class SettingsScene extends Phaser.Scene {
     }
 
     loadSettings() {
-        const saved = localStorage.getItem('doodleJumpSettings');
+        const saved = localStorage.getItem('jumpSettings');
         if (saved) {
             try {
                 this.settings = { ...this.settings, ...JSON.parse(saved) };
@@ -18,7 +18,7 @@ export default class SettingsScene extends Phaser.Scene {
     }
     
     saveSettings() {
-        localStorage.setItem('doodleJumpSettings', JSON.stringify(this.settings));
+        localStorage.setItem('jumpSettings', JSON.stringify(this.settings));
         console.log("💾 Saved settings:", this.settings);
     }
     
@@ -203,6 +203,7 @@ export default class SettingsScene extends Phaser.Scene {
         console.log(`✅ Difficulty set to: ${level}`);
     }
     
+    // In SettingsScene.js, update the createAudioSettings method:
     createAudioSettings() {
         // Section title
         this.add.text(400, 490, 'AUDIO', {
@@ -212,9 +213,10 @@ export default class SettingsScene extends Phaser.Scene {
         }).setOrigin(0.5);
         
         // Sound toggle
-        this.soundOption = this.add.text(400, 530, `Sound: ${this.settings.settings.sound ? 'ON' : 'OFF'}`, {
+        const soundState = this.settings.settings.sound ? 'ON 🔊' : 'OFF 🔇';
+        this.soundOption = this.add.text(400, 530, `Sound: ${soundState}`, {
             fontSize: '20px',
-            fill: '#bdc3c7',
+            fill: this.settings.settings.sound ? '#2ecc71' : '#e74c3c',
             fontFamily: 'Arial',
             backgroundColor: '#2c3e50',
             padding: { x: 10, y: 5 }
@@ -222,7 +224,15 @@ export default class SettingsScene extends Phaser.Scene {
         
         this.soundOption.on('pointerdown', () => {
             const newState = this.settings.toggleSound();
-            this.soundOption.setText(`Sound: ${newState ? 'ON' : 'OFF'}`);
+            const newText = newState ? 'ON 🔊' : 'OFF 🔇';
+            this.soundOption.setText(`Sound: ${newText}`);
+            this.soundOption.setFill(newState ? '#2ecc71' : '#e74c3c');
+            
+            // Play test sound when turning on
+            if (newState) {
+                // We could add a test sound here
+                console.log("🔊 Sound enabled!");
+            }
         });
     }
     

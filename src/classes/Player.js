@@ -5,7 +5,7 @@ export default class Player {
         // Create player sprite with physics
         this.sprite = scene.physics.add.sprite(x, y, 'player');
         
-        // Doodle Jump style physics
+        // Jump style physics
         this.sprite.setBounce(0.3);
         this.sprite.setCollideWorldBounds(false);
         this.sprite.setGravityY(800);
@@ -37,6 +37,13 @@ export default class Player {
         if (cursors.up.isDown && this.isGrounded()) {
             this.sprite.setVelocityY(this.jumpForce);
             console.log("🦘 JUMP! Force:", this.jumpForce);
+
+            // PLAY JUMP SOUND
+            if (this.scene.audioManager) {
+                this.scene.audioManager.playSound('jump', { volume: 0.5 });
+            }
+            
+            console.log("🦘 JUMP!");
         }
     }
     
