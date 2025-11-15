@@ -24,6 +24,10 @@ export default class PlatformManager {
     }
     
     createPlatform(x, y, width = 200) {
+        // Ensure platform stays within game bounds
+        const safeX = Phaser.Math.Clamp(x, width/2, 800 - width/2);
+        const safeY = Phaser.Math.Clamp(y, 50, 550); // Keep away from edges
+        
         const platform = this.platforms.create(x, y, 'platform');
         platform.setDisplaySize(width, 32);
         platform.refreshBody();

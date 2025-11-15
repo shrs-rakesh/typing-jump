@@ -18,7 +18,7 @@ export default class LetterManager {
         this.currentLetters.add(letter);
         
         // Add LARGER, CLEARER text to the platform
-        const letterText = this.scene.add.text(platform.x, platform.y - 25, letter, {
+        const letterText = this.scene.add.text(platform.x, platform.y - 35, letter, {
             fontSize: '32px', // Larger font
             fill: '#ffffff', // White text
             fontFamily: 'Arial, sans-serif',
@@ -39,6 +39,8 @@ export default class LetterManager {
         platform.letterText = letterText;
         platform.assignedLetter = letter;
         platform.isActive = false;
+
+        this.updatePlatformAppearance(platform);
         
         return letter;
     }
@@ -49,6 +51,11 @@ export default class LetterManager {
         // Check if pressed key matches any current letter
         if (this.currentLetters.has(uppercaseKey)) {
             console.log(`✅ Correct key pressed: ${uppercaseKey}`);
+
+            // PLAY CORRECT TYPE SOUND
+            if (this.scene.audioManager) {
+                this.scene.audioManager.playSound('type_correct', { volume: 0.7 });
+            }
             
             // Activate all platforms with this letter
             this.activatePlatformsWithLetter(uppercaseKey);
@@ -60,6 +67,11 @@ export default class LetterManager {
         }
         
         console.log(`❌ Wrong key pressed: ${uppercaseKey}`);
+
+        // PLAY WRONG TYPE SOUND
+        if (this.scene.audioManager) {
+            this.scene.audioManager.playSound('type_wrong', { volume: 0.3 });
+        }
         return false; // Wrong key
     }
     
@@ -81,6 +93,11 @@ export default class LetterManager {
         if (platform.letterText) {
             platform.letterText.setFill('#2ecc71');
             platform.letterText.setStroke('#27ae60', 4);
+        }
+
+        // PLAY PLATFORM ACTIVATION SOUND
+        if (this.scene.audioManager) {
+            this.scene.audioManager.playSound('platform_activate', { volume: 0.4 });
         }
         
         // Particle effect (we'll add this later)
@@ -113,42 +130,74 @@ export default class LetterManager {
         return Array.from(this.currentLetters).sort();
     }
 
-    highlightPlatformsWithLetters() {
+    // NEW METHOD: Update platform appearance based on current needs
+    updatePlatformAppearance(platform) {
+        const letter = this.platformLetters.get(platform);
         const currentLetters = this.getCurrentLetters();
+
+        console.log("🟥 FORCING ALL PLATFORMS RED!");
         
-        this.platformLetters.forEach((letter, platform) => {
+        if (!platform.isActive) {
             if (currentLetters.includes(letter)) {
-                // HIGHLIGHT platforms that need this letter
+                // HIGHLIGHT platforms that NEED this letter
                 platform.setTint(0xffa500); // Bright orange
-                platform.setAlpha(1); // Fully visible
+                platform.setAlpha(1);
                 
                 if (platform.letterText) {
                     platform.letterText.setStyle({
-                        fontSize: '36px', // Even larger
+                        fontSize: '80px', // EXTRA HUGE when urgent
                         fill: '#ffff00', // Bright yellow
                         fontWeight: 'bold',
                         stroke: '#000000',
-                        strokeThickness: 8
+                        strokeThickness: 18
                     });
-                }
-            } else if (!platform.isActive) {
-                // Dim platforms that don't need letters yet
-                platform.setTint(0x444444); // Dark gray
-                platform.setAlpha(0.7); // Semi-transparent
-                
-                if (platform.letterText) {
-                    platform.letterText.setStyle({
-                        fontSize: '24px',
-                        fill: '#888888', // Gray text
-                        stroke: '#000000',
-                        strokeThickness: 4
+                    
+                    // Strong pulsing animation
+                    this.scene.tweens.add({
+                        targets: platform.letterText,
+                        scale: 1.3,
+                        duration: 300,
+                        yoyo: true,
+                        repeat: -1,
+                        ease: 'Sine.easeInOut'
                     });
                 }
             } else {
-                // Active platforms - keep them visible but not highlighted
-                platform.clearTint();
-                platform.setAlpha(1);
+                // Dim platforms that don't need this letter yet
+                platform.setTint(0x444444); // Dark gray
+                platform.setAlpha(0.4); // Semi-transparent
+                
+                if (platform.letterText) {
+                    platform.letterText.setStyle({
+                        fontSize: '32px',
+                        fill: '#888888', // Gray text
+                        stroke: '#000000',
+                        strokeThickness: 6
+                    });
+                    platform.letterText.setScale(1.0); // Stop any animation
+                }
             }
+        } else {
+            // Active platforms - normal appearance
+            platform.clearTint();
+            platform.setAlpha(1);
+            
+            if (platform.letterText) {
+                platform.letterText.setStyle({
+                    fontSize: '36px',
+                    fill: '#00ff00', // Green for active
+                    stroke: '#000000',
+                    strokeThickness: 8
+                });
+
+                platform.letterText.setScale(1.0); // Stop animation
+            }
+        }
+    }
+
+    highlightPlatformsWithLetters() {
+        this.platformLetters.forEach((letter, platform) => {
+            this.updatePlatformAppearance(platform);
         });
     }
 }

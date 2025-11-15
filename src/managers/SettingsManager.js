@@ -10,7 +10,7 @@ export default class SettingsManager {
     }
     
     loadSettings() {
-        const saved = localStorage.getItem('doodleJumpSettings');
+        const saved = localStorage.getItem('jumpSettings');
         if (saved) {
             try {
                 this.settings = { ...this.settings, ...JSON.parse(saved) };
@@ -22,7 +22,7 @@ export default class SettingsManager {
     }
     
     saveSettings() {
-        localStorage.setItem('doodleJumpSettings', JSON.stringify(this.settings));
+        localStorage.setItem('jumpSettings', JSON.stringify(this.settings));
         console.log("💾 Saved settings:", this.settings);
     }
     

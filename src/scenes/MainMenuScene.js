@@ -9,7 +9,7 @@ export default class MainMenuScene extends Phaser.Scene {
         this.cameras.main.setBackgroundColor('#2c3e50');
         
         // Title
-        this.add.text(400, 150, 'TYPING DOODLE JUMP', {
+        this.add.text(400, 150, 'TYPING JUMP', {
             fontSize: '48px',
             fill: '#ecf0f1',
             fontFamily: 'Arial',
