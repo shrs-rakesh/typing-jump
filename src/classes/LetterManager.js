@@ -12,10 +12,15 @@ export default class LetterManager {
         // Get a random letter from our pool
         const randomIndex = Math.floor(Math.random() * this.letterPool.length);
         const letter = this.letterPool[randomIndex];
+
+        console.log("🏷️ Assigning letter", letter, "to platform at", platform.x, platform.y);
         
         // Store the association
         this.platformLetters.set(platform, letter);
         this.currentLetters.add(letter);
+
+        console.log("📊 Now have", this.currentLetters.size, "unique letters needed:");
+        console.log("📊 Letters:", Array.from(this.currentLetters));
         
         // Add LARGER, CLEARER text to the platform
         const letterText = this.scene.add.text(platform.x, platform.y - 35, letter, {
@@ -47,6 +52,9 @@ export default class LetterManager {
     
     handleKeyPress(key) {
         const uppercaseKey = key.toUpperCase();
+
+        console.log("🔤 LetterManager: Checking key", uppercaseKey);
+        console.log("🔤 Current letters needed:", Array.from(this.currentLetters));
         
         // Check if pressed key matches any current letter
         if (this.currentLetters.has(uppercaseKey)) {
@@ -62,6 +70,9 @@ export default class LetterManager {
             
             // Remove from current letters
             this.currentLetters.delete(uppercaseKey);
+
+            console.log("✅ Removed", uppercaseKey, "from current letters");
+            console.log("🔤 Remaining letters:", Array.from(this.currentLetters));
             
             return true; // Correct key
         }
