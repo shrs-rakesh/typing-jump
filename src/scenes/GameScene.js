@@ -70,6 +70,10 @@ export default class GameScene extends Phaser.Scene {
         // Camera setup
         this.setupCamera();
         console.log("🔧 Step 9: Camera setup");
+
+        if (this.letterManager) {
+            console.log("🔧 Current letters:", Array.from(this.letterManager.currentLetters));
+        }
         
         // UI setup
         this.setupUI();
@@ -77,6 +81,9 @@ export default class GameScene extends Phaser.Scene {
 
         console.log("🔧 Step 11: About to create typing display...");
         console.log("🔧 Control type check:", this.controlType === 'typing' ? 'TYPING MODE' : 'ARROW MODE');
+
+        console.log("🔧 About to create typing display...");
+        this.createTypingDisplay();
 
         if (this.controlType === 'typing') {
             console.log("🔧 Creating typing display because we're in typing mode");
@@ -107,16 +114,22 @@ export default class GameScene extends Phaser.Scene {
     }
     
     setupCamera() {
-        this.physics.world.setBounds(0, 0, 800, 600);
+        // this.physics.world.setBounds(0, 0, 800, 600);
+        this.physics.world.setBounds(0, -2000, 800, 2700);
 
         // Camera follows player vertically only
         this.cameras.main.startFollow(this.player.sprite);
-        this.cameras.main.setFollowOffset(0, 150); // Look further ahead upward
-        
-        // Set deadzone - camera moves when player goes above this point
-        this.cameras.main.setDeadzone(0, 100); // Smaller deadzone for faster following
 
-        this.cameras.main.setBounds(0, 0, 800, 600);
+        // camera moves when player leaves the area
+        this.cameras.main.setDeadzone(0, 100); 
+
+        // set follow offset to look ahead forward
+        this.cameras.main.setFollowOffset(0, 150); 
+
+        // this.cameras.main.setBounds(0, 0, 800, 600);
+
+        // Set larger camera bounds to allow scrolling
+        this.cameras.main.setBounds(0, -2000, 800, 2700);
         
         // Smoother camera following
         this.cameras.main.setLerp(0.1, 0.1);
@@ -466,19 +479,43 @@ export default class GameScene extends Phaser.Scene {
         
         // Typing keys - only in typing mode
         if (this.controlType === 'typing') {
+            console.log("⌨️ Setting up typing input system...");
+
             this.input.keyboard.on('keydown', (event) => {
                 if (this.isGameOver) return;
+
+                console.log("🔤 Key pressed:", event.key, "Key code:", event.keyCode);
                 
-                if (event.key.length === 1 || event.key === ' ') {
-                    const isCorrect = this.letterManager.handleKeyPress(event.key);
+                // if (event.key.length === 1 || event.key === ' ') {
+                //     const isCorrect = this.letterManager.handleKeyPress(event.key);
                     
-                    if (isCorrect) {
-                        this.typedCorrectly++;
-                        this.showKeyPressFeedback(event.key.toUpperCase(), true);
+                //     if (isCorrect) {
+                //         this.typedCorrectly++;
+                //         this.showKeyPressFeedback(event.key.toUpperCase(), true);
+                //     } else {
+                //         this.typedWrong++;
+                //         this.showKeyPressFeedback(event.key.toUpperCase(), false);
+                //     }
+                // }
+                if (event.key.length === 1) {
+                    console.log("📝 Processing letter key:", event.key);
+                    
+                    if (this.letterManager) {
+                        const isCorrect = this.letterManager.handleKeyPress(event.key);
+                        console.log("✅ Key result:", isCorrect ? "CORRECT" : "WRONG");
+                        
+                        if (isCorrect) {
+                            this.typedCorrectly++;
+                            this.showKeyPressFeedback(event.key.toUpperCase(), true);
+                        } else {
+                            this.typedWrong++;
+                            this.showKeyPressFeedback(event.key.toUpperCase(), false);
+                        }
                     } else {
-                        this.typedWrong++;
-                        this.showKeyPressFeedback(event.key.toUpperCase(), false);
+                        console.log("❌ LetterManager is null!");
                     }
+                } else {
+                    console.log("⏭️ Ignoring non-letter key:", event.key);
                 }
             });
         }
@@ -772,35 +809,55 @@ export default class GameScene extends Phaser.Scene {
         this.typingDisplayBg.setDepth(1000);
         console.log("🟧 Background created");
         
-        // CREATE THE MAIN TEXT
-        this.typingDisplayText = this.add.text(400, 80, 'TYPE: A', {
+        // CREATE THE MAIN TEXT 
+        let initialText = 'TYPE: ?';
+        if (this.letterManager && this.letterManager.currentLetters.size > 0) {
+            const firstLetter = Array.from(this.letterManager.currentLetters)[0];
+            initialText = `TYPE: ${firstLetter}`;
+            console.log("🟧 Using real letter:", firstLetter);
+        } else {
+            console.log("🟧 No letters available yet, using placeholder");
+        }
+        
+        this.typingDisplayText = this.add.text(400, 80, initialText, {
             fontSize: '48px',
             fill: '#ffffff',
             fontFamily: 'Arial',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            stroke: '#000000',
+            strokeThickness: 8
         });
         this.typingDisplayText.setOrigin(0.5);
         this.typingDisplayText.setScrollFactor(0);
         this.typingDisplayText.setDepth(1001);
-        console.log("🟧 Main text created");
+        console.log("🟧 Main text created:", initialText);
         
-        // CREATE THE INSTRUCTION TEXT
-        this.typingDisplayInstruction = this.add.text(400, 140, 'Press A on keyboard!', {
+        // CREATE THE INSTRUCTION TEXT 
+        let instructionText = 'Press any letter on keyboard!';
+        if (this.letterManager && this.letterManager.currentLetters.size > 0) {
+            const letters = Array.from(this.letterManager.currentLetters).join(', ');
+            instructionText = `Press: ${letters}`;
+        }
+        
+        this.typingDisplayInstruction = this.add.text(400, 140, instructionText, {
             fontSize: '18px',
             fill: '#ffff00',
-            fontFamily: 'Arial'
+            fontFamily: 'Arial',
+            backgroundColor: '#000000',
+            padding: { x: 15, y: 8 }
         });
         this.typingDisplayInstruction.setOrigin(0.5);
         this.typingDisplayInstruction.setScrollFactor(0);
         this.typingDisplayInstruction.setDepth(1001);
-        console.log("🟧 Instruction text created");
+        console.log("🟧 Instruction text created:", instructionText);
         
         // ADD A TEST MESSAGE TO CONFIRM IT'S WORKING
         const testMessage = this.add.text(400, 200, 'ORANGE BOX SHOULD BE VISIBLE!', {
             fontSize: '24px',
             fill: '#ff0000',
             fontFamily: 'Arial',
-            backgroundColor: '#ffff00'
+            backgroundColor: '#ffff00',
+            padding: { x: 20, y: 10 }
         });
         testMessage.setOrigin(0.5);
         testMessage.setScrollFactor(0);
