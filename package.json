@@ -1,23 +1,31 @@
 {
   "name": "typing-jump",
   "version": "1.0.0",
+  "homepage": "https://shrs-rakesh.github.io/typing-jump/",
   "description": "Educational typing game built with Phaser.js",
   "main": "src/main.js",
   "scripts": {
     "dev": "webpack serve --mode development",
     "build": "webpack --mode production",
-    "start": "webpack serve --mode development --open"
+    "start": "webpack serve --mode development --open",
+    "deploy": "gh-pages -d dist"
   },
-  "keywords": ["phaser", "game", "education", "typing"],
+  "keywords": [
+    "phaser",
+    "game",
+    "education",
+    "typing"
+  ],
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
     "phaser": "^3.80.1"
   },
   "devDependencies": {
+    "gh-pages": "^6.3.0",
+    "html-webpack-plugin": "^5.5.3",
     "webpack": "^5.88.0",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^4.15.1",
-    "html-webpack-plugin": "^5.5.3"
+    "webpack-dev-server": "^4.15.1"
   }
 }
