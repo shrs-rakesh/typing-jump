@@ -852,18 +852,18 @@ export default class GameScene extends Phaser.Scene {
         console.log("🟧 Instruction text created:", instructionText);
         
         // ADD A TEST MESSAGE TO CONFIRM IT'S WORKING
-        const testMessage = this.add.text(400, 200, 'ORANGE BOX SHOULD BE VISIBLE!', {
-            fontSize: '24px',
-            fill: '#ff0000',
-            fontFamily: 'Arial',
-            backgroundColor: '#ffff00',
-            padding: { x: 20, y: 10 }
-        });
-        testMessage.setOrigin(0.5);
-        testMessage.setScrollFactor(0);
-        console.log("🟧 Test message created");
+        // const testMessage = this.add.text(400, 200, 'ORANGE BOX SHOULD BE VISIBLE!', {
+        //     fontSize: '24px',
+        //     fill: '#ff0000',
+        //     fontFamily: 'Arial',
+        //     backgroundColor: '#ffff00',
+        //     padding: { x: 20, y: 10 }
+        // });
+        // testMessage.setOrigin(0.5);
+        // testMessage.setScrollFactor(0);
+        // console.log("🟧 Test message created");
         
-        console.log("✅ createTypingDisplay() COMPLETED SUCCESSFULLY!");
+        // console.log("✅ createTypingDisplay() COMPLETED SUCCESSFULLY!");
     }
 
     // Update the typing display with current letters
